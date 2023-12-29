@@ -52,6 +52,40 @@ export default function SignUp() {
     }
   };
 
+   //LOGIN FUNCTIONALITY
+   const handleLogin = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/users/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log(response.status, data);
+
+      if (response.ok) {
+        alert("Login successful!", data.message);
+      } else {
+        if (response.status === 404) {
+          alert('User not found please Signup.');
+        } else if (response.status === 401) {
+          alert('Incorrect password.')
+        } else {
+          setError("Error logging in.");
+        }
+      }
+    } catch (err) {
+      console.error("Error logging in user:", err);
+      alert('Error logging in User.', err);
+    }
+  };
+
   
   return (
     <div className="min-h-screen flex items-center justify-center">
@@ -62,10 +96,10 @@ export default function SignUp() {
           <h3 className="text-2xl font-semibold mb-2">Login</h3>
           <h5>Use your credentials to login.</h5>
           <form className="mt-2 flex flex-col">
-            <input type="email" placeholder="email" className="border border-gray-300 rounded px-3 py-2 mt-2"/>
-            <input type="password" placeholder="password" className="border border-gray-300 rounded px-3 py-2 mt-2"/>
+            <input type="email" placeholder="email" className="border border-gray-300 rounded px-3 py-2 mt-2" value={email} onChange={(e) => setEmail(e.target.value)}/>
+            <input type="password" placeholder="password" className="border border-gray-300 rounded px-3 py-2 mt-2" value={password} onChange={(e) => setPassword(e.target.value)}/>
             <p>Forgot your password?</p>
-            <button className="mt-1 text-white px-3 py-1 border rounded-xl bg-slate-800">
+            <button className="mt-1 text-white px-3 py-1 border rounded-xl bg-slate-800" onClick={handleLogin}>
               LOGIN
             </button>
           </form>
