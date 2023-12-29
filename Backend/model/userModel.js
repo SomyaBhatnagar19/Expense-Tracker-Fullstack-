@@ -60,6 +60,19 @@ const UserModel = {
       throw err;
     }
   },
+
+  //Getting data from users table
+  getAllUsers: async () => {
+    try {
+        const connection = await createConnection();
+        const [rows] = await connection.query('SELECT * FROM users');
+        connection.end();
+        return rows;
+    } catch (err) {
+        console.error('Error fetching users.', err);
+        throw err;
+    }
+},
 };
 
 module.exports = UserModel;
