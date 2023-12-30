@@ -1,8 +1,11 @@
 /* /backend/controller/userController.js */
 // code for both signup and login
 
-const express = require("express");
+const express = require('express');
+
 const UserModel = require("../model/userModel");
+
+const bcrypt = require('bcrypt');
 
 const router = express.Router();
 
@@ -27,8 +30,11 @@ router.post("/", async (req, res) => {
         .json({ error: "User with this email already exists." });
     }
 
-    // NEW USER CREATION IN DATABASE
-    const newUser = await UserModel.createUser(username, email, password);
+    // NEW USER CREATION IN DATABASE USING BCRPT PASSWORD FOR ENCRYPTING 
+    const salt = 10;
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = await UserModel.createUser(username, email, hashedPassword);
     res.status(201).json({ newUser, message: "User created successfully." });
   } catch (err) {
     console.log("Error creating new user.", err);
@@ -60,13 +66,19 @@ router.post('/login', async(req, res) => {
       return res.status(404).json({Error: "User not found. Please Sign up."});
     }
 
-    //checking for password in database and that entered but the user
-    if(existingUser.password !== password) {
-      return res.status(401).json({Error: "Incorrect Password."})
-    }
+    // checking for password in database using bcrypt.compare
+    bcrypt.compare(password, existingUser.password, (err, result) => {
+      if (err) {
+        throw new error('Something went wrong.');
+      }
 
-    //successful login
-    res.status(200).json({message: "User successfully logged in."});
+      if (!result) {
+        return res.status(401).json({ Error: "Incorrect Password." });
+      }
+
+      // successful login
+      res.status(200).json({ message: "User successfully logged in." });
+    });
   } catch (err) {
     console.error("Error logging in user.", err);
     res.status(500).json({ error: "Internal Server Error" });
