@@ -2,24 +2,22 @@
 
 import React, { useState } from "react";
 
-export default function SignUp() {
+export default function SignUp({ onSignUp }) {
   const [showForm, setShowForm] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showLogin, setShowLogin] = useState("");
+  const [error, setError] = useState("");
 
-  //opening signup if user clicks on it
   const SignUpButtonClicked = () => {
     setShowForm(true);
   };
 
-  //opening login form
   const LoginButtonClicked = () => {
     setShowLogin(true);
   }
 
-  //POSTING DATA IN MYSQQL BACKEND FROM SIGNUP FORM
   const handleSignUp = async () => {
     try {
       const response = await fetch("http://localhost:3000/users", {
@@ -35,22 +33,24 @@ export default function SignUp() {
       });
 
       const data = await response.json();
-      console.log(response.status, data);
 
       if (response.ok) {
         alert("User created successfully!", data.message);
+        onSignUp(email);
       } else {
         if (response.status === 400 && data.error.includes("already exists")) {
           alert('User with this email already exists.')
         } else {
-          setError("Error creating new user.");
+          console.error("Error creating new user:", data.error);
+          alert("Error creating new user. Please try again.");
         }
       }
     } catch (err) {
       console.error("Error creating new user:", err);
-      alert('Error creating new User.', err);
+      alert("Error creating new User. Please try again.");
     }
   };
+
 
    //LOGIN FUNCTIONALITY
    const handleLogin = async () => {
@@ -97,7 +97,7 @@ export default function SignUp() {
           <h5>Use your credentials to login.</h5>
           <form className="mt-2 flex flex-col">
             <input type="email" placeholder="email" className="border border-gray-300 rounded px-3 py-2 mt-2" value={email} onChange={(e) => setEmail(e.target.value)}/>
-            <input type="password" placeholder="password" className="border border-gray-300 rounded px-3 py-2 mt-2" value={password} onChange={(e) => setPassword(e.target.value)}/>
+            <input type="password" placeholder="password" className="border border-gray-300 rounded px-3 py-2 mt-2" value={password} onChange={(e) => setPassword(e.target.value)} />
             <p>Forgot your password?</p>
             <button className="mt-1 text-white px-3 py-1 border rounded-xl bg-slate-800" onClick={handleLogin}>
               LOGIN
