@@ -14,6 +14,7 @@ const ExpensesModel = {
           description VARCHAR(255) NOT NULL,
           amount DECIMAL(10, 2) NOT NULL,
           category VARCHAR(255) NOT NULL,
+          date DATE NOT NULL,
           email VARCHAR(255) NOT NULL,
           INDEX fk_users_idx (email ASC),
           CONSTRAINT fk_users_expenses
@@ -27,12 +28,13 @@ const ExpensesModel = {
     }
   },
 
-  createExpense: async (description, amount, category, email) => {
+  //POSTING NEW EXPENSE DATA
+  createExpense: async (description, amount, category, date, email) => {
     try {
       const connection = await createConnection();
       const [result] = await connection.query(
-        "INSERT INTO expenses (description, amount, category, email) VALUES (?, ?, ?, ?)",
-        [description, amount, category, email]
+        "INSERT INTO expenses (description, amount, category, date, email) VALUES (?, ?, ?, ?, ?)",
+        [description, amount, category, date, email]
       );
       connection.end();
       return result;
@@ -41,7 +43,8 @@ const ExpensesModel = {
       throw err;
     }
   },
-
+  
+  //GET EXPENSE USING EMAIL
   getAllExpensesByUser: async (email) => {
     try {
       const connection = await createConnection();
@@ -53,6 +56,18 @@ const ExpensesModel = {
       return rows;
     } catch (err) {
       console.error("Error fetching expenses for the user.", err);
+      throw err;
+    }
+  },
+
+  //DELETING EXPENSE 
+  deleteExpenseById: async (id) => {
+    try {
+      const connection = await createConnection();
+      await connection.query("DELETE FROM expenses WHERE id = ?", [id]);
+      connection.end();
+    } catch (err) {
+      console.error("Error deleting expense from the database.", err);
       throw err;
     }
   },

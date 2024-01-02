@@ -14,8 +14,10 @@ ExpensesModel.initialize();
 // CREATE NEW EXPENSE
 router.post("/", async (req, res) => {
   try {
-    const { description, amount, category, email } = req.body;
+    const { description, amount, category, date, email } = req.body;
 
+    console.log("Received POST request at /expenses");
+    
     // Check if the user with the given email exists
     const existingUser = await UserModel.getUserByEmail(email);
 
@@ -29,6 +31,7 @@ router.post("/", async (req, res) => {
       description,
       amount,
       category,
+      date,
       email
     );
     res.status(201).json({ newExpense, message: "Expense created successfully." });
@@ -57,6 +60,29 @@ router.get("/:email", async (req, res) => {
     res.status(200).json(expenses);
   } catch (err) {
     console.error("Error fetching expenses.", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//DELETING DATA USING EMAIL
+router.delete("/:email/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.params;
+
+    // Check if the user with the given email exists
+    const existingUser = await UserModel.getUserByEmail(email);
+
+    if (!existingUser) {
+      // User does not exist
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    // Delete the expense with the given ID
+    await ExpensesModel.deleteExpenseById(id);
+    res.status(200).json({ message: "Expense deleted successfully." });
+  } catch (err) {
+    console.error("Error deleting expense.", err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

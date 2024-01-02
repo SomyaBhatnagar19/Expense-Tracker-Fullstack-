@@ -2,11 +2,15 @@
 
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const UserController = require('./controller/userController');
 const ExpensesController = require('./controller/expensesController');
 
 const app = express();
+
+// Middleware to parse JSON in the request body
+app.use(bodyParser.json());
 
 app.use(cors());
 

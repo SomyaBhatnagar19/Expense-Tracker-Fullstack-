@@ -36,7 +36,7 @@ export default function SignUp({ onSignUp }) {
 
       if (response.ok) {
         alert("User created successfully!", data.message);
-        onSignUp(email);
+        onSignUp({ email });
       } else {
         if (response.status === 400 && data.error.includes("already exists")) {
           alert('User with this email already exists.')
@@ -53,7 +53,8 @@ export default function SignUp({ onSignUp }) {
 
 
    //LOGIN FUNCTIONALITY
-   const handleLogin = async () => {
+   const handleLogin = async (e) => {
+    e.preventDefault();
     try {
       const response = await fetch("http://localhost:3000/users/login", {
         method: "POST",
@@ -71,6 +72,9 @@ export default function SignUp({ onSignUp }) {
 
       if (response.ok) {
         alert("Login successful!", data.message);
+
+        localStorage.setItem('email', email);
+
       } else {
         if (response.status === 404) {
           alert('User not found please Signup.');

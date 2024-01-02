@@ -1,14 +1,22 @@
 /* /frontend/Views/ExpensesForm.js */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import deleteBtn from "../assets/deleteBtn.png";
 
-export default function ExpensesForm({ userEmail }) {
+export default function ExpensesForm() {
   const [category, setCategory] = useState("");
+  const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
-  
+  const [expenses, setExpenses] = useState([]);
+
+  //FETCHING EMAIL OF USER FROM LOCAL STORAGE
+  const userEmail = localStorage.getItem("email");
+
   // FUNCTIONALITY FOR ADDING EXPENSE TO BACKEND
-  const handleAddExpense = async () => {
+  const handleAddExpense = async (e) => {
+    e.preventDefault();
+
     try {
       console.log(
         "Request Body:",
@@ -16,6 +24,7 @@ export default function ExpensesForm({ userEmail }) {
           category: category,
           description: description,
           amount: amount,
+          date: date,
           email: userEmail,
         })
       );
@@ -29,17 +38,17 @@ export default function ExpensesForm({ userEmail }) {
           category: category,
           description: description,
           amount: amount,
+          date: date,
           email: userEmail,
         }),
       });
 
       const data = await response.json();
-      console.log(response.status, data);
 
       if (response.ok) {
         alert("Expense added successfully!", data.message);
       } else {
-        setError("Error adding expense.");
+        setError("Error adding expense: " + data.error);
       }
     } catch (err) {
       console.error("Error adding expense:", err);
@@ -47,15 +56,67 @@ export default function ExpensesForm({ userEmail }) {
     }
   };
 
+  // FUNCTION TO DELETE EXPENSE
+  const handleDeleteExpense = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/expenses/${userEmail}/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        alert("Expense deleted successfully!", data.message);
+        // Fetch updated expenses after deletion
+        fetchExpenses();
+      } else {
+        const errorMessage = await response.text();
+        setError("Error deleting expense: " + errorMessage);
+      }
+    } catch (err) {
+      console.error("Error deleting expense:", err);
+      alert("Error deleting expense.", err);
+    }
+  };
+
+  // FUNCTION TO FETCH EXPENSES FOR THE USER
+  const fetchExpenses = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/expenses/${userEmail}`
+      );
+      const data = await response.json();
+
+      if (response.ok) {
+        setExpenses(data);
+      } else {
+        setError("Error fetching expenses: " + data.error);
+      }
+    } catch (err) {
+      console.error("Error fetching expenses:", err);
+      setError("Error fetching expenses.");
+    }
+  };
+
+  useEffect(() => {
+    // Fetch expenses when the component mounts
+    fetchExpenses();
+  }, [expenses]);
+
   return (
-    <div className="flex flex-col lg:flex-row">
+    <div className="flex flex-col lg:flex-row pb-16">
       {/* Left Side (Form) */}
-      <div className="lg:w-1/4 bg-gradient-to-l from-slate-50 to-slate-100 text-center p-4 border m-2 rounded shadow-xl">
-        <form className="mt-4" onSubmit={handleAddExpense}>
-          <div className="mb-4 flex flex-col">
+      <div className="lg:w-1/5 bg-gradient-to-l from-slate-50 to-slate-300 text-center p-4 border border-slate-900 m-2 rounded shadow-xl">
+        <form onSubmit={handleAddExpense}>
+          <div className="mb-4 flex items-center">
             <label
-              htmlFor="category"
-              className="block text-sm font-medium text-gray-600"
+              htmlFor="Category"
+              className="block text-md font-medium text-slate-100 bg-slate-800 p-2"
             >
               Category
             </label>
@@ -65,24 +126,41 @@ export default function ExpensesForm({ userEmail }) {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
+              <option value="Select Category">Select Category</option>
               <option value="Travel">Travel</option>
-              <option value="Snacks">Snacks/Junk food</option>
+              <option value="Snacks/Junk food">Snacks/Junk food</option>
               <option value="Vegetable">Vegetable</option>
               <option value="Education">Education</option>
               <option value="Stationary">Stationary</option>
               <option value="Fuel">Fuel</option>
-              <option value="Servicing">Repairing/Servicing</option>
+              <option value="Repairing/Servicing">Repairing/Servicing</option>
               <option value="Entertainment">Entertainment</option>
               <option value="Salary">Salary</option>
-              <option value="Bills">Bills/ EMI</option>
-              <option value="Fashion">Fashion & Beauty</option>
+              <option value="Bills/ EMI">Bills/ EMI</option>
+              <option value="Fashion & Beauty">Fashion & Beauty</option>
             </select>
           </div>
 
-          <div className="mb-4 flex flex-col">
+          <div className="mb-4 flex items-center">
+            <label
+              htmlFor="date"
+              className="block text-md font-medium text-slate-100 bg-slate-800 p-2"
+            >
+              Date
+            </label>
+            <input
+              type="date"
+              id="date"
+              className="mt-1 p-2 border rounded w-full"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+
+          <div className="mb-4 flex items-center">
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-600"
+              className="block text-md font-medium text-slate-100 bg-slate-800 p-2"
             >
               Description
             </label>
@@ -95,10 +173,10 @@ export default function ExpensesForm({ userEmail }) {
             />
           </div>
 
-          <div className="mb-4 flex flex-row">
+          <div className="mb-4 flex items-center">
             <label
               htmlFor="amount"
-              className="block text-md font-medium text-gray-600 bg-slate-800"
+              className="block text-md font-medium text-slate-100 bg-slate-800 p-2"
             >
               ₹
             </label>
@@ -121,19 +199,51 @@ export default function ExpensesForm({ userEmail }) {
       </div>
 
       {/* Right Side (User Entered Data) */}
-      <div className="lg:w-1/2 p-4">
-        <h2 className="text-2xl font-semibold mb-4">User Entered Data</h2>
-        <ul>
-          <li className="mb-2">
-            <span className="font-semibold">Category:</span> {category}
-          </li>
-          <li className="mb-2">
-            <span className="font-semibold">Description:</span> {description}
-          </li>
-          <li className="mb-2">
-            <span className="font-semibold">Amount:</span> {amount}
-          </li>
-        </ul>
+      <div className="lg:w-3/4 mt-2">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gradient-to-l from-cyan-500 to-cyan-800 text-slate-200 italic">
+              <th className="py-2 px-4 border border-slate-800">Description</th>
+              <th className="py-2 px-4 border border-slate-800">Category</th>
+              <th className="py-2 px-4 border border-slate-800">Date</th>
+
+              <th className="py-2 px-4 border border-slate-800">Amount</th>
+              <th className="py-2 px-4 border border-slate-800">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {expenses.map((expense) => (
+              <tr key={expense.id} className="text-md italic bg-sky-300">
+                <td className="py-2 px-4 border border-slate-800">
+                  {expense.description}
+                </td>
+                <td className="py-2 px-4 border border-slate-800">
+                  {expense.category}
+                </td>
+                <td className="py-2 px-4 border border-slate-800">
+                  {new Intl.DateTimeFormat("en-US").format(
+                    new Date(expense.date)
+                  )}
+                </td>
+
+                <td className="py-2 px-4 border border-slate-800">
+                  {expense.amount}
+                </td>
+                <td className="py-2 px-4 border border-slate-800">
+                  <div className="flex items-center">
+                    <button className="mr-2">Edit</button>
+                    <img
+                      src={deleteBtn}
+                      alt="deleteBtn"
+                      className="h-10 w-10"
+                      onClick={() => handleDeleteExpense(expense.id)}
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
