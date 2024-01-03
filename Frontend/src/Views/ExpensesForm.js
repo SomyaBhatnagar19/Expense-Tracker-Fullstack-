@@ -1,6 +1,7 @@
 /* /frontend/Views/ExpensesForm.js */
 import React, { useState, useEffect } from "react";
 import deleteBtn from "../assets/deleteBtn.png";
+import editBtn from "../assets/editBtn.png";
 
 export default function ExpensesForm() {
   const [category, setCategory] = useState("");
@@ -10,7 +11,10 @@ export default function ExpensesForm() {
   const [error, setError] = useState("");
   const [expenses, setExpenses] = useState([]);
 
-  //FETCHING EMAIL OF USER FROM LOCAL STORAGE
+  // Function to retrieve the token from localStorage
+  const getToken = () => localStorage.getItem("token");
+
+  // FETCHING EMAIL OF USER FROM LOCAL STORAGE
   const userEmail = localStorage.getItem("email");
 
   // FUNCTIONALITY FOR ADDING EXPENSE TO BACKEND
@@ -18,21 +22,13 @@ export default function ExpensesForm() {
     e.preventDefault();
 
     try {
-      console.log(
-        "Request Body:",
-        JSON.stringify({
-          category: category,
-          description: description,
-          amount: amount,
-          date: date,
-          email: userEmail,
-        })
-      );
-
+      const token = getToken(); // Get the token
+      console.log(token);
       const response = await fetch(`http://localhost:3000/expenses`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Set Authorization header
         },
         body: JSON.stringify({
           category: category,
@@ -47,6 +43,8 @@ export default function ExpensesForm() {
 
       if (response.ok) {
         alert("Expense added successfully!", data.message);
+        // Fetch updated expenses after deletion
+        fetchExpenses();
       } else {
         setError("Error adding expense: " + data.error);
       }
@@ -59,12 +57,14 @@ export default function ExpensesForm() {
   // FUNCTION TO DELETE EXPENSE
   const handleDeleteExpense = async (id) => {
     try {
+      const token = getToken(); // Get the token
       const response = await fetch(
         `http://localhost:3000/expenses/${userEmail}/${id}`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Set Authorization header
           },
         }
       );
@@ -87,8 +87,14 @@ export default function ExpensesForm() {
   // FUNCTION TO FETCH EXPENSES FOR THE USER
   const fetchExpenses = async () => {
     try {
+      const token = getToken(); // Get the token
       const response = await fetch(
-        `http://localhost:3000/expenses/${userEmail}`
+        `http://localhost:3000/expenses/${userEmail}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
+        }
       );
       const data = await response.json();
 
@@ -106,7 +112,8 @@ export default function ExpensesForm() {
   useEffect(() => {
     // Fetch expenses when the component mounts
     fetchExpenses();
-  }, [expenses]);
+  }, []);
+
 
   return (
     <div className="flex flex-col lg:flex-row pb-16">
@@ -230,8 +237,12 @@ export default function ExpensesForm() {
                   {expense.amount}
                 </td>
                 <td className="py-2 px-4 border border-slate-800">
-                  <div className="flex items-center">
-                    <button className="mr-2">Edit</button>
+                  <div className="flex items-center justify-between">
+                  <img
+                      src={editBtn}
+                      alt="editBtn"
+                      className="h-6 w-6"
+                    />
                     <img
                       src={deleteBtn}
                       alt="deleteBtn"

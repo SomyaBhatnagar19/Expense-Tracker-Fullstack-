@@ -7,6 +7,11 @@ const UserModel = require("../model/userModel");
 
 const bcrypt = require('bcrypt');
 
+//USING JSON WEB TOKEN 
+const jwt = require('jsonwebtoken');
+
+const loginAuthentication = require('../middleware/auth');
+
 const router = express.Router();
 
 // Applying middleware to parse JSON body
@@ -43,7 +48,7 @@ router.post("/", async (req, res) => {
 });
 
 //GETTING DATA FROM USERS TABLE
-router.get('/', async(req, res) => {
+router.get('/', loginAuthentication, async(req, res) => {
     try {
         // Retrieve all users from the database
         const users = await UserModel.getAllUsers();
@@ -66,7 +71,7 @@ router.post('/login', async(req, res) => {
       return res.status(404).json({Error: "User not found. Please Sign up."});
     }
 
-    // checking for password in database using bcrypt.compare
+    //checking for password in database using bcrypt.compare
     bcrypt.compare(password, existingUser.password, (err, result) => {
       if (err) {
         throw new error('Something went wrong.');
@@ -75,6 +80,10 @@ router.post('/login', async(req, res) => {
       if (!result) {
         return res.status(401).json({ Error: "Incorrect Password." });
       }
+
+      //CREATE A JWT TOKEN WITH USER DATA AFTER SUCCESSFUL LOGIN
+      const token = jwt.sign({userId: existingUser.id, username: existingUser.username, email: existingUser.email,}, '12345678907464534262945050683619')
+      //my secreat key = 12345678907464534262945050683619
 
       // successful login
       res.status(200).json({ message: "User successfully logged in." });

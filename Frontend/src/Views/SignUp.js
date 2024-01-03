@@ -73,7 +73,15 @@ export default function SignUp({ onSignUp }) {
       if (response.ok) {
         alert("Login successful!", data.message);
 
+        //STORING USER EMAIL ON SUCCESSFUL LOGIN
         localStorage.setItem('email', email);
+
+        // STORING TOKEN FROM RESPONSE
+      const token = JSON.stringify({
+        email: email,
+        password: password,
+      })
+      localStorage.setItem('token', token);
 
       } else {
         if (response.status === 404) {
