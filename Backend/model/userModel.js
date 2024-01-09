@@ -12,7 +12,8 @@ const UserModel = {
           id INT AUTO_INCREMENT PRIMARY KEY,
           username VARCHAR(255) NOT NULL,
           email VARCHAR(255) NOT NULL,
-          password VARCHAR(255) NOT NULL
+          password VARCHAR(255) NOT NULL,
+          premiumUser BOOLEAN DEFAULT FALSE
         )`);
       connection.end();
     } catch (err) {
@@ -21,14 +22,14 @@ const UserModel = {
   },
 
   // Define createUser function
-  createUser: async (username, email, password) => {
+  createUser: async (username, email, password, premiumUser) => {
     try {
       const connection = await createConnection();
 
       // insert user into the table
       const [result] = await connection.query(
-        "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-        [username, email, password]
+        "INSERT INTO users (username, email, password, premiumUser) VALUES (?, ?, ?, ?)",
+        [username, email, password, premiumUser]
       );
 
       connection.end();

@@ -20,10 +20,42 @@ router.use(express.json());
 // Initializing the user table
 UserModel.initialize();
 
+
+// Middleware to verify the JWT token
+const verifyTokenMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    jwt.verify(token, '12345678907464534262945050683619', (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      req.decodedToken = decoded;
+      next();
+    });
+  } else {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+// Route to update premiumUser status
+router.post('/updatePremiumStatus', verifyTokenMiddleware, async (req, res) => {
+  try {
+    const userId = req.decodedToken.userId;
+
+    // Update premiumUser status in the database
+    await UserModel.updateUserPremiumStatus(userId);
+
+    res.status(200).json({ message: 'Premium status updated successfully' });
+  } catch (err) {
+    console.error('Error updating premium status:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 //CREATING NEW USERS IN USER TABLE
 router.post("/", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, premiumUser } = req.body;
 
     // Check if the user with the given email already exists
     const existingUser = await UserModel.getUserByEmail(email);
